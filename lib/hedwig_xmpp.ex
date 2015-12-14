@@ -1,26 +1,16 @@
 defmodule Hedwig.Adapters.XMPP do
-  use Hedwig.Adapter, :romeo
+  use Hedwig.Adapter
   use Romeo.XML
-
-  import Kernel, except: [send: 2]
 
   require Logger
 
-  ## Adapter API
-
-  def send(pid, %Hedwig.Message{} = msg) do
-    GenServer.cast(pid, {:send, msg})
-  end
-
-  def reply(pid, %Hedwig.Message{} = msg) do
-    GenServer.cast(pid, {:reply, msg})
-  end
-
-  def emote(pid, %Hedwig.Message{} = msg) do
-    GenServer.cast(pid, {:emote, msg})
-  end
-
   ## Callbacks
+
+  def init({robot, opts}) do
+    connection_opts = Keyword.put_new(opts, :nickname, opts[:name])
+    {:ok, conn} = Romeo.Connection.start_link(connection_opts)
+    {:ok, %{conn: conn, opts: opts, robot: robot}}
+  end
 
   def handle_cast({:send, %{text: text} = msg}, %{conn: conn} = state) do
     msg = romeo_message(msg)
@@ -54,8 +44,14 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
-  def handle_info({:stanza, %Message{body: "", payload: payload, type: "groupchat"} = msg}, state) do
-    Logger.warn fn -> "Topic? #{inspect msg}" end
+  def handle_info({:stanza, %Message{body: "", type: "groupchat"}}, state) do
+    # Most likely a room topic
+    # %Romeo.Stanza.Message{body: "", delayed?: false, from:
+    # %Romeo.JID{resource: "", server: "conference.im.bluebox.dev", user:
+    # "lobby"}, html: nil, id: "", payload: [%{name: "subject", payload:
+    # ["Lobby"]}], to: %Romeo.JID{resource: "hedwig", server:
+    # "im.bluebox.dev", user: "alfred"}, type: "groupchat"}
+    # ]]
     {:noreply, state}
   end
 
@@ -66,9 +62,15 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
+  # {:stanza, %Presence{from: %Romeo.JID{resource: "hedwig", server: "im.bluebox.dev", user: "alfred"}, id: nil, payload: [], show: "", status: "", to: %Romeo.JID{resource: "hedwig", server: "im.bluebox.dev", user: "alfred"}, type: nil}}
+  def handle_info({:stanza, %Presence{from: from} = msg}, %{robot: robot, opts: opts} = state) do
+    {:noreply, state}
+  end
+
   def handle_info({:resource_bound, resource}, %{robot: robot, opts: opts} = state) do
-    Hedwig.Robot.register_name(robot, opts[:jid])
-    Hedwig.Robot.register_name(robot, opts[:jid] <> "/" <> resource)
+    Hedwig.Robot.register(robot, opts[:name])
+    Hedwig.Robot.register(robot, opts[:jid])
+    Hedwig.Robot.register(robot, opts[:jid] <> "/" <> resource)
     {:noreply, state}
   end
 
