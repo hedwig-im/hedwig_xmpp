@@ -46,24 +46,23 @@ defmodule Hedwig.Adapters.XMPP do
 
   def handle_info({:stanza, %Message{body: "", type: "groupchat"}}, state) do
     # Most likely a room topic
-    # %Romeo.Stanza.Message{body: "", delayed?: false, from:
-    # %Romeo.JID{resource: "", server: "conference.im.bluebox.dev", user:
-    # "lobby"}, html: nil, id: "", payload: [%{name: "subject", payload:
-    # ["Lobby"]}], to: %Romeo.JID{resource: "hedwig", server:
-    # "im.bluebox.dev", user: "alfred"}, type: "groupchat"}
-    # ]]
     {:noreply, state}
   end
 
-  def handle_info({:stanza, %Message{from: from} = msg}, %{robot: robot, opts: opts} = state) do
+  def handle_info({:stanza, %Message{} = msg}, %{robot: robot, opts: opts} = state) do
     unless from_self?(msg, opts[:name]) do
       Hedwig.Robot.handle_message(robot, hedwig_message(msg))
     end
     {:noreply, state}
   end
 
-  # {:stanza, %Presence{from: %Romeo.JID{resource: "hedwig", server: "im.bluebox.dev", user: "alfred"}, id: nil, payload: [], show: "", status: "", to: %Romeo.JID{resource: "hedwig", server: "im.bluebox.dev", user: "alfred"}, type: nil}}
-  def handle_info({:stanza, %Presence{from: from} = msg}, %{robot: robot, opts: opts} = state) do
+  # TODO: handle Presence
+  def handle_info({:stanza, %Presence{from: _from} = _msg}, %{robot: _robot, opts: _opts} = state) do
+    {:noreply, state}
+  end
+
+  # TODO: handle IQ
+  def handle_info({:stanza, %IQ{from: _from} = _msg}, %{robot: _robot, opts: _opts} = state) do
     {:noreply, state}
   end
 
@@ -105,7 +104,7 @@ defmodule Hedwig.Adapters.XMPP do
   end
   defp from_self?(_, _), do: false
 
-  defp hedwig_message(%Romeo.Stanza.Message{body: body, from: from, type: type} = msg) do
+  defp hedwig_message(%Romeo.Stanza.Message{body: body, type: type} = msg) do
     {room, user} = extract_room_and_user(msg)
 
     %Hedwig.Message{
