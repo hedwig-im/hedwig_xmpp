@@ -11,7 +11,7 @@ defmodule HedwigXMPP.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :romeo]]
+    [applications: [:logger, :hedwig, :romeo]]
   end
 
   defp deps do
