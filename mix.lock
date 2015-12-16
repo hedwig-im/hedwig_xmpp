@@ -2,4 +2,4 @@
   "exml": {:git, "https://github.com/esl/exml.git", "d7b745fa89389b53706a07f33775f1f814c66cb4", []},
   "gproc": {:hex, :gproc, "0.5.0"},
   "hedwig": {:git, "https://github.com/hedwig-im/hedwig.git", "6c503f95728d8faffbce3cfc7880f2465d7fc1f7", []},
-  "romeo": {:git, "https://github.com/scrogson/romeo.git", "bf0ff8ec50c5c8e6a3543cc65f8447703e047014", []}}
+  "romeo": {:hex, :romeo, "0.2.0"}}
