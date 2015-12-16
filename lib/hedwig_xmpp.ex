@@ -74,12 +74,14 @@ defmodule Hedwig.Adapters.XMPP do
   end
 
   def handle_info(:connection_ready, %{conn: conn, robot: robot, opts: opts} = state) do
+    rooms = Keyword.get(opts, :rooms, [])
+
     if Keyword.get(opts, :send_presence, true) do
       Romeo.Connection.send(conn, Romeo.Stanza.presence)
     end
 
     if Keyword.get(opts, :join_rooms, true) do
-      for {room, _opts} <- opts[:rooms] do
+      for {room, _opts} <- rooms do
         Romeo.Connection.send(conn, Romeo.Stanza.join(room, opts[:name]))
       end
     end
