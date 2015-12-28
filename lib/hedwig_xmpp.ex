@@ -1,4 +1,6 @@
 defmodule Hedwig.Adapters.XMPP do
+  @moduledoc false
+
   use Hedwig.Adapter
   use Romeo.XML
 
