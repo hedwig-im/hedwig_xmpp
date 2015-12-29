@@ -6,12 +6,21 @@ defmodule Hedwig.Adapters.XMPP do
 
   require Logger
 
+  defmodule State do
+    defstruct conn: nil,
+              jid_mapping: %{},
+              opts: nil,
+              robot: nil,
+              rooms: [],
+              roster: []
+  end
+
   ## Callbacks
 
   def init({robot, opts}) do
     connection_opts = Keyword.put_new(opts, :nickname, opts[:name])
     {:ok, conn} = Romeo.Connection.start_link(connection_opts)
-    {:ok, %{conn: conn, opts: opts, robot: robot}}
+    {:ok, %State{conn: conn, opts: opts, robot: robot}}
   end
 
   def handle_cast({:send, %{text: text} = msg}, %{conn: conn} = state) do
