@@ -91,8 +91,7 @@ defmodule Hedwig.Adapters.XMPP do
   def handle_info({:stanza, %Presence{from: from, xml: xml}}, state) do
     state =
       if from_room?(from, state.rooms) do
-        real_jid = real_jid_from_presence(xml)
-        IO.inspect real_jid
+        real_jid = real_jid_from_room_presence(xml)
         update_in(state.jid_mapping, &(Map.put(&1, from.full, real_jid)))
       else
         state
@@ -126,15 +125,25 @@ defmodule Hedwig.Adapters.XMPP do
 
   ## Helpers
 
-  defp real_jid_from_presence(xml) do
-    case Romeo.XML.subelement(xml, "x") do
-      nil ->
+  defp real_jid_from_room_presence(xml) do
+    case Romeo.XML.subelements(xml, "x") do
+      [] ->
         nil
-      val ->
-        val
-        |> Romeo.XML.subelement("item")
-        |> Romeo.XML.attr("jid")
+      elems ->
+        try do
+          elems
+          |> Enum.filter(&contains_muc_user_namespace?/1)
+          |> Enum.at(0)
+          |> Romeo.XML.subelement("item")
+          |> Romeo.XML.attr("jid")
+        catch
+          _ -> nil
+        end
     end
+  end
+
+  defp contains_muc_user_namespace?(xmlel(attrs: attrs)) do
+    Enum.any?(attrs, fn {k, v} -> k == "xmlns" && v == ns_muc_user end)
   end
 
   defp get_roster(conn, _opts) do
