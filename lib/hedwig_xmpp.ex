@@ -123,7 +123,7 @@ defmodule Hedwig.Adapters.XMPP do
     %Romeo.Stanza.Message{
       to: send_to(type, room, user),
       type: type,
-      body: text
+      body: :exml.escape_cdata(text)
     }
   end
 
