@@ -3,7 +3,7 @@ defmodule HedwigXMPP.Mixfile do
 
   def project do
     [app: :hedwig_xmpp,
-     version: "1.0.0-rc0",
+     version: "1.0.0-rc1",
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -16,7 +16,7 @@ defmodule HedwigXMPP.Mixfile do
 
   defp deps do
     [{:exml, github: "esl/exml"},
-     {:hedwig, "~> 1.0.0-rc0"},
+     {:hedwig, "~> 1.0.0-rc1"},
      {:romeo, "~> 0.4"}]
   end
 end
