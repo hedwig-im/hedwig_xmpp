@@ -41,6 +41,27 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
+  def handle_cast({:rooms_results, %IQ{xml: xml}}, state) do
+    rooms =
+      xml
+      |> Romeo.XML.subelement("query")
+      |> Romeo.XML.subelements("item")
+      |> Enum.map(&Romeo.XML.attr(&1, "jid"))
+
+    {:noreply, %{state | rooms: rooms}}
+  end
+
+  def handle_cast({:roster_results, %IQ{xml: xml}}, state) do
+    roster =
+      xml
+      |> Romeo.XML.subelement("query")
+      |> Romeo.XML.subelements("item")
+      |> Enum.map(&Romeo.XML.attr(&1, "jid"))
+      |> Enum.reduce(%{}, &(Map.put(&2, &1, %{})))
+
+    {:noreply, %{state | roster: roster}}
+  end
+
   def handle_info({:stanza, xmlstreamstart()}, state) do
     {:noreply, state}
   end
@@ -50,8 +71,8 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
-  def handle_info({:stanza, %Message{type: "error"} = msg}, state) do
-    Logger.error fn -> "There was an error: #{inspect msg}" end
+  def handle_info({:stanza, %{type: "error"} = stanza}, state) do
+    Logger.error fn -> "There was an error: #{inspect stanza}" end
     {:noreply, state}
   end
 
@@ -62,40 +83,36 @@ defmodule Hedwig.Adapters.XMPP do
 
   def handle_info({:stanza, %Message{} = msg}, %{robot: robot, opts: opts} = state) do
     unless from_self?(msg, opts[:name]) do
-      Hedwig.Robot.handle_message(robot, hedwig_message(msg))
+      Hedwig.Robot.handle_message(robot, hedwig_message(msg, state.jid_mapping))
     end
     {:noreply, state}
   end
 
-  # TODO: handle Presence
-  def handle_info({:stanza, %Presence{from: _from} = _msg}, %{robot: _robot, opts: _opts} = state) do
-    {:noreply, state}
-  end
-
-  # TODO: handle IQ
-  def handle_info({:stanza, %IQ{from: _from} = _msg}, %{robot: _robot, opts: _opts} = state) do
+  def handle_info({:stanza, %Presence{from: from, xml: xml}}, state) do
+    state =
+      if from_room?(from, state.rooms) do
+        real_jid = real_jid_from_presence(xml)
+        IO.inspect real_jid
+        update_in(state.jid_mapping, &(Map.put(&1, from.full, real_jid)))
+      else
+        state
+      end
     {:noreply, state}
   end
 
   def handle_info({:resource_bound, resource}, %{robot: robot, opts: opts} = state) do
     Hedwig.Robot.register(robot, opts[:name])
-    Hedwig.Robot.register(robot, opts[:jid])
-    Hedwig.Robot.register(robot, opts[:jid] <> "/" <> resource)
     {:noreply, state}
   end
 
   def handle_info(:connection_ready, %{conn: conn, robot: robot, opts: opts} = state) do
-    rooms = Keyword.get(opts, :rooms, [])
+    server = Romeo.JID.server(opts[:jid])
 
-    if Keyword.get(opts, :send_presence, true) do
-      Romeo.Connection.send(conn, Romeo.Stanza.presence)
-    end
-
-    if Keyword.get(opts, :join_rooms, true) do
-      for {room, _opts} <- rooms do
-        Romeo.Connection.send(conn, Romeo.Stanza.join(room, opts[:name]))
-      end
-    end
+    conn
+    |> get_roster(opts)
+    |> request_all_rooms(opts)
+    |> send_presence(opts)
+    |> join_rooms(opts)
 
     Hedwig.Robot.after_connect(robot)
 
@@ -109,6 +126,75 @@ defmodule Hedwig.Adapters.XMPP do
 
   ## Helpers
 
+  defp real_jid_from_presence(xml) do
+    case Romeo.XML.subelement(xml, "x") do
+      nil ->
+        nil
+      val ->
+        val
+        |> Romeo.XML.subelement("item")
+        |> Romeo.XML.attr("jid")
+    end
+  end
+
+  defp get_roster(conn, _opts) do
+    stanza = Romeo.Stanza.get_roster
+    id = Romeo.XML.attr(stanza, "id")
+    Romeo.Connection.send(conn, stanza)
+
+    receive do
+      {:stanza, %IQ{id: ^id, type: "result"} = iq} ->
+        GenServer.cast(self, {:roster_results, iq})
+    end
+
+    conn
+  end
+
+  defp request_all_rooms(conn, opts) do
+    rooms = Keyword.get(opts, :rooms)
+    if rooms do
+      stanza =
+        rooms
+        |> hd
+        |> elem(0)
+        |> Romeo.JID.server
+        |> Romeo.Stanza.disco_items
+
+      id = Romeo.XML.attr(stanza, "id")
+      Romeo.Connection.send(conn, stanza)
+
+      receive do
+        {:stanza, %IQ{id: ^id, type: "result"} = iq} ->
+          GenServer.cast(self, {:rooms_results, iq})
+      end
+    end
+
+    conn
+  end
+
+  defp send_presence(conn, opts) do
+    if Keyword.get(opts, :send_presence, true) do
+      Romeo.Connection.send(conn, Romeo.Stanza.presence)
+    end
+
+    conn
+  end
+
+  defp join_rooms(conn, opts) do
+    rooms = Keyword.get(opts, :rooms, [])
+    if Keyword.get(opts, :join_rooms, true) do
+      for {room, room_opts} <- rooms do
+        Romeo.Connection.send(conn, Romeo.Stanza.join(room, opts[:name], room_opts))
+      end
+    end
+
+    conn
+  end
+
+  defp from_room?(from, rooms) do
+    Romeo.JID.bare(from) in rooms
+  end
+
   defp from_self?(%Message{from: %{resource: name}, type: "groupchat"}, name) do
     true
   end
@@ -117,8 +203,8 @@ defmodule Hedwig.Adapters.XMPP do
   end
   defp from_self?(_, _), do: false
 
-  defp hedwig_message(%Romeo.Stanza.Message{body: body, type: type} = msg) do
-    {room, user} = extract_room_and_user(msg)
+  defp hedwig_message(%Message{body: body, type: type} = msg, mapping) do
+    {room, user} = extract_room_and_user(msg, mapping)
 
     %Hedwig.Message{
       adapter: {__MODULE__, self},
@@ -138,22 +224,22 @@ defmodule Hedwig.Adapters.XMPP do
     }
   end
 
-  defp extract_room_and_user(%Romeo.Stanza.Message{from: from, type: "groupchat"}) do
+  defp extract_room_and_user(%Message{from: from, type: "groupchat"}, mapping) do
     room = Romeo.JID.bare(from)
     user = %{
       id: Romeo.JID.resource(from),
       room: room,
-      jid: to_string(from),
+      jid: mapping[from.full] || from.full,
       name: Romeo.JID.resource(from)
     }
 
     {room, user}
   end
-  defp extract_room_and_user(%Romeo.Stanza.Message{from: from}) do
+  defp extract_room_and_user(%Romeo.Stanza.Message{from: from}, mapping) do
     user = %{
       id: Romeo.JID.user(from),
       room: nil,
-      jid: to_string(from),
+      jid: from.full,
       name: Romeo.JID.user(from)
     }
     {nil, user}
@@ -162,6 +248,7 @@ defmodule Hedwig.Adapters.XMPP do
   defp send_to("groupchat", room, _user) do
     Romeo.JID.bare(room)
   end
-  defp send_to(_type, _room, user),
-    do: Romeo.JID.parse(user.jid)
+  defp send_to(_type, _room, user) do
+    Romeo.JID.parse(user.jid)
+  end
 end
