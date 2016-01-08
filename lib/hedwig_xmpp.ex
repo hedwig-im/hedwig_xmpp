@@ -24,8 +24,13 @@ defmodule Hedwig.Adapters.XMPP do
   end
 
   def handle_cast({:send, %{text: text} = msg}, %{conn: conn} = state) do
-    msg = romeo_message(msg)
-    Romeo.Connection.send(conn, %{msg | body: text})
+    case text do
+      xmlel() ->
+        Romeo.Connection.send(conn, text)
+      _ ->
+        msg = romeo_message(msg)
+        Romeo.Connection.send(conn, %{msg | body: text})
+    end
     {:noreply, state}
   end
 
