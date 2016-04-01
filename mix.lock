@@ -1,5 +1,5 @@
 %{"connection": {:hex, :connection, "1.0.2"},
   "exml": {:git, "https://github.com/esl/exml.git", "d7b745fa89389b53706a07f33775f1f814c66cb4", []},
   "gproc": {:hex, :gproc, "0.5.0"},
-  "hedwig": {:hex, :hedwig, "1.0.0-rc3"},
+  "hedwig": {:git, "https://github.com/hedwig-im/hedwig.git", "18273f14fb8a6d5869551f0c7a3d2eebb2b3662a", []},
   "romeo": {:hex, :romeo, "0.4.0"}}
