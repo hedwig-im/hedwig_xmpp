@@ -21,7 +21,7 @@ defmodule HedwigXMPP.Mixfile do
 
   defp deps do
     [{:exml, github: "esl/exml"},
-     {:hedwig, "~> 1.0.0-rc3"},
+     {:hedwig, github: "hedwig-im/hedwig"},
      {:romeo, "~> 0.4"}]
   end
 
