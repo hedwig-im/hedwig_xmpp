@@ -38,7 +38,7 @@ Add `hedwig_xmpp` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:exml, github: "esl/exml"},
+  [{:exml, github: "paulgray/exml"},
    {:hedwig_xmpp, "~> 1.0.0-rc0"}]
 end
 ```
