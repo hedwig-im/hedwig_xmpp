@@ -29,7 +29,7 @@ defmodule HedwigXMPP.Mixfile do
      maintainers: ["Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{
-       "GitHub" => "https://github.com/hedwig-im/hedwig"
+       "GitHub" => "https://github.com/hedwig-im/hedwig_xmpp"
      }]
   end
 end
