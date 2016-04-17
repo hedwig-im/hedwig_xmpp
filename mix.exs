@@ -1,7 +1,7 @@
 defmodule HedwigXMPP.Mixfile do
   use Mix.Project
 
-  @version "1.0.0-rc2"
+  @version "1.0.0-rc.3"
 
   def project do
     [app: :hedwig_xmpp,
@@ -20,9 +20,8 @@ defmodule HedwigXMPP.Mixfile do
   end
 
   defp deps do
-    [{:exml, github: "paulgray/exml"},
-     {:hedwig, github: "hedwig-im/hedwig"},
-     {:romeo, "~> 0.4"}]
+    [{:hedwig, "1.0.0-rc.4"},
+     {:romeo, "~> 0.5"}]
   end
 
   defp package do

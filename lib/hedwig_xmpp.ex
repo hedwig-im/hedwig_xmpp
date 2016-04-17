@@ -104,14 +104,12 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
-  def handle_info({:resource_bound, resource}, %{robot: robot, opts: opts} = state) do
+  def handle_info({:resource_bound, _resource}, %{robot: robot, opts: opts} = state) do
     Hedwig.Robot.register(robot, opts[:name])
     {:noreply, state}
   end
 
   def handle_info(:connection_ready, %{conn: conn, robot: robot, opts: opts} = state) do
-    server = Romeo.JID.server(opts[:jid])
-
     conn
     |> get_roster(opts)
     |> request_all_rooms(opts)
@@ -248,7 +246,7 @@ defmodule Hedwig.Adapters.XMPP do
 
     {room, user}
   end
-  defp extract_room_and_user(%Romeo.Stanza.Message{from: from}, mapping) do
+  defp extract_room_and_user(%Romeo.Stanza.Message{from: from}, _mapping) do
     user = %{
       id: Romeo.JID.user(from),
       room: nil,
