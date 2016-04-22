@@ -20,7 +20,7 @@ defmodule HedwigXMPP.Mixfile do
   end
 
   defp deps do
-    [{:hedwig, "1.0.0-rc.4"},
+    [{:hedwig, github: "hedwig-im/hedwig"},
      {:romeo, "~> 0.5"}]
   end
 

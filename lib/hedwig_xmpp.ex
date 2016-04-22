@@ -104,8 +104,8 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
-  def handle_info({:resource_bound, _resource}, %{robot: robot, opts: opts} = state) do
-    Hedwig.Robot.register(robot, opts[:name])
+  def handle_info({:resource_bound, resource}, %{robot: robot, opts: opts} = state) do
+    Hedwig.Robot.handle_in(robot, {:resource_bound, resource})
     {:noreply, state}
   end
 
@@ -121,8 +121,8 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
-  def handle_info(msg, state) do
-    Logger.warn fn -> "Adapter received unhandled message: #{inspect msg}" end
+  def handle_info(msg, %{robot: robot} = state) do
+    Hedwig.Robot.handle_in(robot, msg)
     {:noreply, state}
   end
 
@@ -237,20 +237,16 @@ defmodule Hedwig.Adapters.XMPP do
 
   defp extract_room_and_user(%Message{from: from, type: "groupchat"}, mapping) do
     room = Romeo.JID.bare(from)
-    user = %{
-      id: Romeo.JID.resource(from),
-      room: room,
-      jid: mapping[from.full] || from.full,
+    user = %Hedwig.User{
+      id: mapping[from.full] || from.full,
       name: Romeo.JID.resource(from)
     }
 
     {room, user}
   end
   defp extract_room_and_user(%Romeo.Stanza.Message{from: from}, _mapping) do
-    user = %{
-      id: Romeo.JID.user(from),
-      room: nil,
-      jid: from.full,
+    user = %Hedwig.User{
+      id: from.full,
       name: Romeo.JID.user(from)
     }
     {nil, user}
@@ -260,6 +256,6 @@ defmodule Hedwig.Adapters.XMPP do
     Romeo.JID.bare(room)
   end
   defp send_to(_type, _room, user) do
-    Romeo.JID.parse(user.jid)
+    Romeo.JID.parse(user.id)
   end
 end
