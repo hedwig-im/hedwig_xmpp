@@ -1,7 +1,7 @@
 defmodule HedwigXMPP.Mixfile do
   use Mix.Project
 
-  @version "1.0.0-rc.3"
+  @version "1.0.0-rc.4"
 
   def project do
     [app: :hedwig_xmpp,
@@ -10,9 +10,9 @@ defmodule HedwigXMPP.Mixfile do
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     package: package,
+     package: package(),
      description: "An XMPP adapter for Hedwig",
-     deps: deps]
+     deps: deps()]
   end
 
   def application do
@@ -21,7 +21,7 @@ defmodule HedwigXMPP.Mixfile do
 
   defp deps do
     [{:hedwig, github: "hedwig-im/hedwig"},
-     {:romeo, "~> 0.5"}]
+     {:romeo, "~> 0.6"}]
   end
 
   defp package do
