@@ -38,7 +38,7 @@ Add `hedwig_xmpp` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-   [{:hedwig_xmpp, "~> 1.0.0-rc.4"}]
+   [{:hedwig_xmpp, github: "hedwig-im/hedwig_xmpp"}]
 end
 ```
 
@@ -103,8 +103,7 @@ config :alfred, Alfred.Robot,
   aka: "/",
   responders: [
     {Hedwig.Responders.Help, []},
-    {Hedwig.Responders.GreatSuccess, []},
-    {Hedwig.Responders.ShipIt, []}
+    {Hedwig.Responders.Ping, []}
   ]
 ```
 
@@ -139,8 +138,7 @@ config :alfred, Alfred.Robot,
   ],
   responders: [
     {Hedwig.Responders.Help, []},
-    {Hedwig.Responders.GreatSuccess, []},
-    {Hedwig.Responders.ShipIt, []}
+    {Hedwig.Responders.Ping, []}
   ]
 ```
 

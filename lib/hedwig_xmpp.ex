@@ -4,6 +4,8 @@ defmodule Hedwig.Adapters.XMPP do
   use Hedwig.Adapter
   use Romeo.XML
 
+  @timeout 5000
+
   require Logger
 
   defmodule State do
@@ -88,7 +90,7 @@ defmodule Hedwig.Adapters.XMPP do
 
   def handle_info({:stanza, %Message{} = msg}, %{robot: robot, opts: opts} = state) do
     unless from_self?(msg, opts[:name]) do
-      Hedwig.Robot.handle_message(robot, hedwig_message(msg, state.jid_mapping))
+      Hedwig.Robot.handle_in(robot, hedwig_message(msg, state.jid_mapping))
     end
     {:noreply, state}
   end
@@ -116,7 +118,7 @@ defmodule Hedwig.Adapters.XMPP do
     |> send_presence(opts)
     |> join_rooms(opts)
 
-    Hedwig.Robot.after_connect(robot)
+    Hedwig.Robot.handle_connect(robot)
 
     {:noreply, state}
   end
@@ -157,6 +159,8 @@ defmodule Hedwig.Adapters.XMPP do
     receive do
       {:stanza, %IQ{id: ^id, type: "result"} = iq} ->
         GenServer.cast(self, {:roster_results, iq})
+    after @timeout ->
+      :ok
     end
 
     conn
@@ -178,6 +182,8 @@ defmodule Hedwig.Adapters.XMPP do
       receive do
         {:stanza, %IQ{id: ^id, type: "result"} = iq} ->
           GenServer.cast(self, {:rooms_results, iq})
+      after @timeout ->
+        :ok
       end
     end
 
