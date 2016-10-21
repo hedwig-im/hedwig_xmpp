@@ -90,7 +90,7 @@ defmodule Hedwig.Adapters.XMPP do
 
   def handle_info({:stanza, %Message{} = msg}, %{robot: robot, opts: opts} = state) do
     unless from_self?(msg, opts[:name]) do
-      Hedwig.Robot.handle_in(robot, hedwig_message(msg, state.jid_mapping))
+      Hedwig.Robot.handle_in(robot, hedwig_message(msg, state))
     end
     {:noreply, state}
   end
@@ -221,11 +221,12 @@ defmodule Hedwig.Adapters.XMPP do
   end
   defp from_self?(_, _), do: false
 
-  defp hedwig_message(%Message{body: body, type: type} = msg, mapping) do
+  defp hedwig_message(%Message{body: body, type: type} = msg, %{jid_mapping: mapping, robot: robot}) do
     {room, user} = extract_room_and_user(msg, mapping)
 
     %Hedwig.Message{
       ref: make_ref(),
+      robot: robot,
       room: room,
       text: body,
       type: type,
