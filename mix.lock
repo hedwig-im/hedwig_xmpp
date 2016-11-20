@@ -1,7 +1,7 @@
-%{"connection": {:hex, :connection, "1.0.3", "3145f7416be3df248a4935f24e3221dc467c1e3a158d62015b35bd54da365786", [:mix], []},
+%{"connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], []},
   "exml": {:git, "https://github.com/paulgray/exml.git", "d7b745fa89389b53706a07f33775f1f814c66cb4", []},
-  "fast_xml": {:hex, :fast_xml, "1.1.14", "23d4de66e645bca1d8a557444e83062cc42f235d7a7e2d4072d525bac3986f04", [:rebar3], [{:p1_utils, "1.0.4", [hex: :p1_utils, optional: false]}]},
+  "fast_xml": {:hex, :fast_xml, "1.1.15", "6d23eb7f874e1357cf80a48d75a7bd0c8f6318029dc4b70122e9f54911f57f83", [:rebar3], [{:p1_utils, "1.0.5", [hex: :p1_utils, optional: false]}]},
   "gproc": {:hex, :gproc, "0.5.0", "2df2d886f8f8a7b81a4b04aa17972b5965bbc5bf0100ea6d8e8ac6a0e7389afe", [:rebar], []},
-  "hedwig": {:git, "https://github.com/hedwig-im/hedwig.git", "eeb70eba7730d554da188b9b5da6e20804cdb25a", []},
-  "p1_utils": {:hex, :p1_utils, "1.0.4", "7face65db102b5d1ebe7ad3c7517c5ee8cfbe174c6658e3affbb00eb66e06787", [:rebar3], []},
-  "romeo": {:hex, :romeo, "0.6.0", "a37de89b26e2db040c9650090cc3d1460fd0e93a918634a91aa70897c83f71a9", [:mix], [{:connection, "~> 1.0", [hex: :connection, optional: false]}, {:fast_xml, "~> 1.1", [hex: :fast_xml, optional: false]}]}}
+  "hedwig": {:hex, :hedwig, "1.0.0", "effbb160b9b270cb62ac1b2d6041b4ac731a21b0fc048dd2c35840245fdc0f22", [:mix], []},
+  "p1_utils": {:hex, :p1_utils, "1.0.5", "3e698354fdc1fea5491d991457b0cb986c0a00a47d224feb841dc3ec82b9f721", [:rebar3], []},
+  "romeo": {:hex, :romeo, "0.7.0", "17e46830e49eff4d70e59147e808cd3f5f79912bb90a006afe5a8bb4355c29b3", [:mix], [{:connection, "~> 1.0", [hex: :connection, optional: false]}, {:fast_xml, "~> 1.1", [hex: :fast_xml, optional: false]}]}}
