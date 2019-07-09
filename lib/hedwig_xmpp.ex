@@ -141,7 +141,7 @@ defmodule Hedwig.Adapters.XMPP do
           |> Enum.at(0)
           |> Romeo.XML.subelement("item")
           |> Romeo.XML.attr("jid")
-        catch
+        rescue
           _ -> nil
         end
     end
