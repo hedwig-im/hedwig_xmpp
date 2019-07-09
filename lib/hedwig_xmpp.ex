@@ -106,7 +106,7 @@ defmodule Hedwig.Adapters.XMPP do
     {:noreply, state}
   end
 
-  def handle_info({:resource_bound, resource}, %{robot: robot, opts: opts} = state) do
+  def handle_info({:resource_bound, resource}, %{robot: robot, opts: _opts} = state) do
     Hedwig.Robot.handle_in(robot, {:resource_bound, resource})
     {:noreply, state}
   end
@@ -148,7 +148,7 @@ defmodule Hedwig.Adapters.XMPP do
   end
 
   defp contains_muc_user_namespace?(xmlel(attrs: attrs)) do
-    Enum.any?(attrs, fn {k, v} -> k == "xmlns" && v == ns_muc_user end)
+    Enum.any?(attrs, fn {k, v} -> k == "xmlns" && v == ns_muc_user() end)
   end
 
   defp get_roster(conn, _opts) do
@@ -158,7 +158,7 @@ defmodule Hedwig.Adapters.XMPP do
 
     receive do
       {:stanza, %IQ{id: ^id, type: "result"} = iq} ->
-        GenServer.cast(self, {:roster_results, iq})
+        GenServer.cast(self(), {:roster_results, iq})
     after @timeout ->
       :ok
     end
@@ -181,7 +181,7 @@ defmodule Hedwig.Adapters.XMPP do
 
       receive do
         {:stanza, %IQ{id: ^id, type: "result"} = iq} ->
-          GenServer.cast(self, {:rooms_results, iq})
+          GenServer.cast(self(), {:rooms_results, iq})
       after @timeout ->
         :ok
       end
